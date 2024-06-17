@@ -1,6 +1,6 @@
 import { ItemDto } from './item.dto';
 
 export interface ExpenseBodyDto {
-  baseAmount: number;
+  baseAmount?: number;
   items: ItemDto[];
 }
