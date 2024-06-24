@@ -1,15 +1,12 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit, signal } from '@angular/core';
 import { NgxCurrencyDirective } from 'ngx-currency';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ExpenseBodyDto } from './models/expense-body.dto';
 import { ItemDto } from './models/item.dto';
 @Component({
   selector: 'app-root',
@@ -22,26 +19,45 @@ export class AppComponent implements OnInit {
   calculatorForm!: FormGroup;
   detailsForm!: FormGroup;
 
-  expenseCalculator = signal<ExpenseBodyDto>({ baseAmount: 0, items: [] });
+  baseAmount = signal<number>(0);
+  items = signal<ItemDto[]>([]);
 
   constructor() {
     this.calculatorForm = new FormGroup({
       baseAmount: new FormControl('', [Validators.required]),
       itemTitle: new FormControl('', [Validators.required]),
     });
+    this.detailsForm = new FormGroup({});
   }
   ngOnInit(): void {}
 
-  onChange(event: any) {
-    console.log(event.target);
+  onBaseAmountChange(event: any) {
+    let money = this.retrieveAmount(event.target.value as string);
+    this.baseAmount.update((b) => (b = parseFloat(money)));
   }
 
   addExpenseItem() {
     const title = this.calculatorForm.get('itemTitle')?.value;
+    this.detailsForm.addControl(title, new FormControl(''));
     const item: ItemDto = {
       name: title,
       amount: 0,
+      percentage: 0,
     };
-    // this.expenseCalculator.update((c) => [...c.items, item]);
+    this.items.update((i) => [...i, item]);
+  }
+
+  calculatePercentage(event: any, item: ItemDto) {
+    let money = this.retrieveAmount(event.target.value as string);
+    item.percentage = (parseFloat(money) / this.baseAmount()) * 100;
+    this.items().map((i) =>
+      i.name === item.name
+        ? (i.percentage = (parseFloat(money) / this.baseAmount()) * 100)
+        : i
+    );
+  }
+
+  retrieveAmount(money: string): string {
+    return money.replaceAll(',', '').replace('₦', '');
   }
 }
