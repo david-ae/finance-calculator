@@ -1,5 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  FormControl,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { ItemDto } from '../models/item.dto';
 import { MatButtonModule } from '@angular/material/button';
 import { NgxCurrencyDirective } from 'ngx-currency';
@@ -9,7 +14,7 @@ import { NgxCurrencyDirective } from 'ngx-currency';
   standalone: true,
   imports: [NgxCurrencyDirective, MatButtonModule, ReactiveFormsModule],
   templateUrl: './budget-by-amount.component.html',
-  styleUrl: './budget-by-amount.component.css'
+  styleUrl: './budget-by-amount.component.css',
 })
 export class BudgetByAmountComponent {
   calculatorForm!: FormGroup;
@@ -17,6 +22,7 @@ export class BudgetByAmountComponent {
 
   baseAmount = signal<number>(0);
   items = signal<ItemDto[]>([]);
+  percentageSum = signal<number>(0);
 
   constructor() {
     this.calculatorForm = new FormGroup({
@@ -47,9 +53,15 @@ export class BudgetByAmountComponent {
     let money = this.retrieveAmount(event.target.value as string);
     this.items().map((i) =>
       i.name === item.name
-        ? (i.percentage = (parseFloat(money) / this.baseAmount()) * 100)
+        ? (i.percentage = +(
+            (parseFloat(money) / this.baseAmount()) *
+            100
+          ).toFixed(2))
         : i
     );
+    let sum = this.items().reduce((a, b) => a + b.percentage, 0);
+    this.percentageSum.update((v) => (v = sum));
+    console.log(sum);
   }
 
   retrieveAmount(money: string): string {
